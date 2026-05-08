@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Birthday</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap');
+
+    :root {
+      --bg: #030303;
+      --panel: rgba(8, 8, 8, 0.78);
+      --green: #00ff85;
+      --green-soft: rgba(0, 255, 133, 0.15);
+      --pink: #ff00c8;
+      --orange: #ff9d00;
+      --blue: #4da3ff;
+      --white-soft: rgba(255,255,255,0.7);
+      --border: rgba(255,255,255,0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: white;
+      overflow-x: hidden;
+      font-family: 'Fira Code', monospace;
+      min-height: 100vh;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23ffffff'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='80' cy='60' r='1'/%3E%3Ccircle cx='120' cy='20' r='1'/%3E%3Ccircle cx='150' cy='110' r='1'/%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .scanlines::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        rgba(255,255,255,0.02) 50%,
+        rgba(0,0,0,0.08) 50%
+      );
+      background-size: 100% 4px;
+      z-index: 50;
+      opacity: 0.2;
+    }
+
+    .wrapper {
+      width: min(1200px, 92%);
+      margin: auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .glass {
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.02),
+        0 10px 40px rgba(0,0,0,0.8);
+    }
+
+    .glow-green {
+      box-shadow: 0 0 20px rgba(0,255,133,0.2);
+    }
+
+    .title-gradient {
+      background: linear-gradient(90deg, #ffffff, #00ff85);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: rgba(255,255,255,0.55);
+      line-height: 1.7;
+    }
+
+    .tag {
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .hero {
+      padding-top: 90px;
+    }
+
+    .hero-card {
+      padding: 50px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(0,255,133,0.18), transparent 70%);
+      top: -150px;
+      right: -150px;
+      pointer-events: none;
+    }
+
+    .section {
+      margin-top: 34px;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card h2 {
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+
+    .card p {
+      color: rgba(255,255,255,0.7);
+      line-height: 1.7;
+    }
+
+    .orange-border {
+      border-left: 4px solid var(--orange);
+    }
+
+    .pink-border {
+      border-left: 4px solid var(--pink);
+    }
+
+    .blue-border {
+      border-left: 4px solid var(--blue);
+    }
+
+    .green-border {
+      border-left: 4px solid var(--green);
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      transition: 0.25s ease;
+      text-transform: uppercase;
+      font-size: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: 0.5s ease;
+    }
+
+    .btn:hover::before {
+      transform: translateX(100%);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-green {
+      background: linear-gradient(90deg, #00b95f, #00ff85);
+      color: black;
+    }
+
+    .btn-pink {
+      background: linear-gradient(90deg, #ff00c8, #ff67dd);
+    }
+
+    .btn-orange {
+      background: linear-gradient(90deg, #ff7a00, #ffb300);
+      color: black;
+    }
+
+    .btn-blue {
+      background: linear-gradient(90deg, #2563eb, #4da3ff);
+    }
+
+    .quote-box {
+      margin-top: 18px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.08);
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00ff85, #00b95f);
+      transition: width 0.4s ease;
+      box-shadow: 0 0 20px rgba(0,255,133,0.5);
+    }
+
+    .game-area {
+      position: relative;
+      height: 320px;
+      overflow: hidden;
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at top, rgba(77,163,255,0.12), transparent 50%),
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+      border: 1px solid rgba(255,255,255,0.08);
+      margin-top: 30px;
+    }
+
+    .road {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 70px;
+      height: 4px;
+      background: rgba(255,255,255,0.15);
+    }
+
+    .road::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(90deg, white 50%, transparent 50%);
+      background-size: 30px 4px;
+      opacity: 0.4;
+      animation: roadMove 2s linear infinite;
+    }
+
+    @keyframes roadMove {
+      from {
+        background-position-x: 0;
+      }
+      to {
+        background-position-x: 30px;
+      }
+    }
+
+    .character {
+      position: absolute;
+      bottom: 48px;
+      font-size: 54px;
+      transition: left 0.35s ease;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+    }
+
+    .you {
+      right: 40px;
+    }
+
+    .player {
+      left: 10px;
+    }
+
+    .hud {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .big-distance {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      font-size: 90px;
+      opacity: 0.04;
+      font-weight: 700;
+    }
+
+    .game-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .terminal {
+      background: rgba(0,0,0,0.7);
+      border-radius: 22px;
+      border: 1px solid rgba(0,255,133,0.1);
+      overflow: hidden;
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .red { background: #ff5f56; }
+    .yellow { background: #ffbd2e; }
+    .green { background: #27c93f; }
+
+    .terminal-body {
+      height: 320px;
+      overflow-y: auto;
+      padding: 20px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: rgba(0,255,133,0.8);
+    }
+
+    .terminal-input-row {
+      display: flex;
+      gap: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 16px;
+      align-items: center;
+    }
+
+    .terminal-input {
+      background: transparent;
+      border: none;
+      color: white;
+      width: 100%;
+      outline: none;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .timeline {
+      position: relative;
+      margin-top: 16px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 36px;
+      margin-bottom: 24px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(0,255,133,0.5);
+    }
+
+    .achievement-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .achievement {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      transition: 0.25s ease;
+    }
+
+    .achievement:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,255,133,0.25);
+    }
+
+    .glitch:hover {
+      animation: glitch 0.22s linear;
+    }
+    .photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.photo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.08);
+  min-height: 320px;
+  cursor: pointer;
+  transition: 0.35s ease;
+  background: rgba(255,255,255,0.03);
+}
+
+.photo-card.large {
+  grid-column: span 2;
+  min-height: 420px;
+}
+
+.photo-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 0 30px rgba(0,255,133,0.2);
+}
+
+.photo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.5s ease;
+}
+
+.photo-card:hover img {
+  transform: scale(1.06);
+}
+
+.photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.85),
+    transparent 60%
+  );
+
+  display: flex;
+  align-items: flex-end;
+  padding: 24px;
+
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.85);
+}
+
+@media (max-width: 900px) {
+
+  .photo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .photo-card.large {
+    grid-column: span 1;
+  }
+
+}
+    @keyframes glitch {
+
+      0% {
+        transform: translate(0);
+      }
+
+      20% {
+        transform: translate(-1px, 1px);
+      }
+
+      40% {
+        transform: translate(1px, -1px);
+      }
+
+      60% {
+        transform: translate(-1px, 0px);
+      }
+
+      80% {
+        transform: translate(1px, 1px);
+      }
+
+      100% {
+        transform: translate(0);
+      }
+    }
+
+    .achievement:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,255,133,0.25);
+    }
+
+    .achievement small {
+      display: block;
+      margin-top: 10px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+    }
+
+    .music-player {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px;
+      margin-top: 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .equalizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 30px;
+    }
+
+    .bar {
+      width: 6px;
+      background: var(--green);
+      animation: bounce 1s infinite ease-in-out;
+      border-radius: 999px;
+    }
+
+    .bar:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .bar:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .bar:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        height: 8px;
+      }
+      50% {
+        height: 28px;
+      }
+    }
+
+    footer {
+      padding: 80px 0 50px;
+      text-align: center;
+      color: rgba(255,255,255,0.45);
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .typing {
+      width: fit-content;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 2px solid var(--green);
+      animation:
+        typing 3s steps(40, end),
+        blink 0.7s infinite;
+    }
+
+    @keyframes typing {
+      from {
+        width: 0;
+      }
+      to {
+        width: 100%;
+      }
+    }
+
+    @keyframes blink {
+      50% {
+        border-color: transparent;
+      }
+    }
+
+    .notification-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .notification {
+      min-width: 280px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.9);
+      border: 1px solid rgba(0,255,133,0.18);
+      animation: slideIn 0.4s ease;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .notification strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--green);
+    }
+
+    @media (max-width: 900px) {
+      .grid-two,
+      .achievement-grid,
+      .game-buttons {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-card {
+        padding: 34px 24px;
+      }
+
+      .big-distance {
+        font-size: 44px;
+      }
+
+      .character {
+        font-size: 42px;
+      }
+    }
+  </style>
+</head>
+<audio id="bg-music" loop>
+  <source src="./resonance.mp3" type="audio/mpeg">
+</audio>
+
+
+<body class="scanlines">
+
+  <canvas id="matrix"></canvas>
+  <div class="noise"></div>
+
+  <div class="notification-container" id="notifications"></div>
+
+  <section class="hero wrapper">
+
+    <div class="flex flex-wrap gap-3 mb-6">
+      <div class="tag">Protocol v2.7</div>
+      <div class="tag">Лучший день</div>
+      <div class="tag">Хорошее настроение</div>
+      <div class="tag">Время отдыхать</div>
+    </div>
+
+    <div class="glass hero-card glow-green">
+
+      <p class="text-sm tracking-[0.4em] uppercase text-green-400 mb-5">
+        С Днём Рождения
+      </p>
+
+      <h1 class="text-5xl md:text-7xl font-bold leading-tight title-gradient mb-6">
+        С ДНЁМ РОЖДЕНИЯ
+      </h1>
+
+      <div class="typing text-green-400 mb-8">
+        Ты заслуживаешь самый уютный праздник
+      </div>
+
+      <p class="subtitle max-w-3xl text-lg">
+        Я понял, что обычное поздравление — слишком скучно. Поэтому вместо нормального человека я потратил кучу времени и сделал целый сайт. Да, это было не самое рациональное решение, но зато получилось прикольно.
+      </p>
+
+      <div class="flex flex-wrap gap-4 mt-10">
+        <button class="btn btn-green" id="confetti-btn">
+          Запустить праздник
+        </button>
+
+        <button class="btn btn-pink" id="music-btn">
+          Атмосфера ON
+        </button>
+
+        <button class="btn btn-blue" id="notify-btn">
+          Получить уведомление
+        </button>
+      </div>
+
+      <div class="mt-10 flex flex-wrap gap-4">
+        <div class="tag">
+          Мы знакомы:
+          <span id="uptime">0d 0h 0m 0s</span>
+        </div>
+
+        <div class="tag">
+          Настроение: 100%
+        </div>
+
+        <div class="tag">
+          Хороший вайб: активна
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="wrapper section grid-two">
+
+    <div class="glass card orange-border">
+      <h2>🌸 Небольшой факт</h2>
+
+      <p>
+        За эти несколько дней общения я понял одну вещь: с тобой реально легко и весело общаться. Поэтому сайт официально подтверждает — ты крутой человек.
+      </p>
+
+      <div class="mt-6">
+        <div class="flex justify-between text-sm text-white/70">
+          <span>Энергия смены</span>
+          <span>100%</span>
+        </div>
+
+        <div class="progress">
+          <div class="progress-fill" style="width:100%"></div>
+        </div>
+      </div>
+
+      <div class="quote-box" id="quote-box">
+        Нажми кнопку ниже для получения заводской мотивации.
+      </div>
+
+      <button class="btn btn-orange w-full mt-4" id="quote-btn">
+        Получить мотивацию
+      </button>
+    </div>
+
+    <div class="glass card pink-border">
+      <h2>🎂 Сегодня твой день</h2>
+
+      <p>
+        Сегодня у тебя день рождения, а значит у меня был идеальный повод сделать что‑то странное вместо обычного “с др”. Надеюсь, этот сайт хотя бы чуть‑чуть поднимет тебе настроение.
+      </p>
+
+      <div class="timeline mt-8">
+
+        <div class="timeline-item">
+          <strong class="text-white">Первое общение</strong>
+          <p class="subtitle mt-2">
+            Начало общения и первый commit в историю.
+          </p>
+        </div>
+
+        <div class="timeline-item">
+          <strong class="text-white">Тёплые разговоры</strong>
+          <p class="subtitle mt-2">
+            Мемы, разговоры и бессмысленные шутки стали системной частью дня.
+          </p>
+        </div>
+
+        <div class="timeline-item">
+          <strong class="text-pink-400">Этот день</strong>
+          <p class="subtitle mt-2">
+            Текущая версия сайта успешно запущена.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <section class="wrapper section">
+
+    <div class="glass card blue-border">
+
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2>💫 Симулятор сокращения расстояния</h2>
+          <p class="subtitle mt-2">
+            Между нами километры, но это не мешает мне спамить тебе мемами и делать странные сайты посреди ночи.
+          </p>
+        </div>
+
+        <div class="tag">
+          Remaining:
+          <span id="distance-value">995</span>
+          KM
+        </div>
+      </div>
+
+      <div class="game-area">
+
+        <svg
+          viewBox="0 0 1000 300"
+          class="absolute inset-0 w-full h-full opacity-90"
+        >
+
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <path
+            d="M100 210 C 280 40, 720 40, 900 210"
+            stroke="rgba(255,255,255,0.12)"
+            stroke-width="6"
+            fill="none"
+            stroke-linecap="round"
+          />
+
+          <path
+            id="route-path"
+            d="M100 210 C 280 40, 720 40, 900 210"
+            stroke="#00ff85"
+            stroke-width="6"
+            fill="none"
+            stroke-linecap="round"
+            filter="url(#glow)"
+          />
+
+          <circle cx="100" cy="210" r="10" fill="#00ff85" filter="url(#glow)"/>
+          <circle cx="900" cy="210" r="10" fill="#ff00c8" filter="url(#glow)"/>
+
+          <text x="60" y="250" fill="rgba(255,255,255,0.55)" font-size="20">
+            YOU
+          </text>
+
+          <text x="840" y="250" fill="rgba(255,255,255,0.55)" font-size="20">
+            ME
+          </text>
+
+        </svg>
+
+        <div class="hud">
+          <div>[SYSTEM]: tracking movement...</div>
+          <div>[STATUS]: online</div>
+          <div>[GOAL]: reduce distance to zero</div>
+        </div>
+
+        <div class="big-distance" id="big-distance">
+          995 KM
+        </div>
+
+        <div class="road"></div>
+
+        <div class="character player" id="runner">
+          🏃‍♀️
+        </div>
+
+        <div class="character you">
+          👨‍💻
+        </div>
+
+      </div>
+
+      <div class="game-buttons">
+        <button class="btn btn-blue" id="walk-btn">
+          Маленький шаг
+        </button>
+
+        <button class="btn btn-orange" id="shift-btn">
+          Ещё ближе
+        </button>
+
+        <button class="btn btn-green" id="boost-btn">
+          Обнять виртуально
+        </button>
+      </div>
+
+      <div class="mt-6">
+        <div class="progress">
+          <div class="progress-fill" id="distance-progress"></div>
+        </div>
+      </div>
+
+      <div class="quote-box" id="game-message">
+        Система готова к сокращению расстояния.
+      </div>
+
+    </div>
+
+  </section>
+
+  <section class="wrapper section grid-two">
+
+    <div class="glass card green-border">
+
+      <h2>✨ Причины почему сайт вообще существует</h2>
+
+      <div class="space-y-6 mt-8">
+
+        <div>
+          <div class="flex justify-between text-sm text-white/80">
+            <span>Улыбка</span>
+            <span>100%</span>
+          </div>
+
+          <div class="progress">
+            <div class="progress-fill" style="width:100%"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-sm text-white/80">
+            <span>Нормальное чувство юмора</span>
+            <span>96%</span>
+          </div>
+
+          <div class="progress">
+            <div class="progress-fill" style="width:96%"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-sm text-white/80">
+            <span>Комфорт в общении</span>
+            <span>92%</span>
+          </div>
+
+          <div class="progress">
+            <div class="progress-fill" style="width:92%"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-sm text-white/80">
+            <span>Способность терпеть мои идеи</span>
+            <span>89%</span>
+          </div>
+
+          <div class="progress">
+            <div class="progress-fill" style="width:89%"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="music-player">
+
+        <div>
+          <div class="text-white font-bold">
+            Атмосфера
+          </div>
+
+          <small class="text-white/50">
+            Немного уюта для настроения
+          </small>
+        </div>
+
+        <div class="equalizer">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="glass card blue-border">
+
+      <h2>🌙 Достижения</h2>
+
+      <div class="achievement-grid">
+
+        <div class="achievement glitch">
+          <div class="text-3xl">🌙</div>
+          <strong class="block mt-4">Выжил без сна</strong>
+          <small>
+            Выжить после поздних разговоров.
+          </small>
+        </div>
+
+        <div class="achievement glitch">
+          <div class="text-3xl">⚡</div>
+          <strong class="block mt-4">Ответ быстрее уведомления</strong>
+          <small>
+            Ответить быстрее уведомления.
+          </small>
+        </div>
+
+        <div class="achievement glitch">
+          <div class="text-3xl">🧃</div>
+          <strong class="block mt-4">Слишком много энтузиазма</strong>
+          <small>
+            Сохранить настроение после смены.
+          </small>
+        </div>
+
+        <div class="achievement glitch">
+          <div class="text-3xl">💻</div>
+          <strong class="block mt-4">Подозрительно комфортный человек</strong>
+          <small>
+            Пережить очередной баг.
+          </small>
+        </div>
+
+        <div class="achievement glitch">
+          <div class="text-3xl">🚀</div>
+          <strong class="block mt-4">Минус километры</strong>
+          <small>
+            Уменьшить расстояние до нуля.
+          </small>
+        </div>
+
+        <div class="achievement glitch">
+          <div class="text-3xl">🎂</div>
+          <strong class="block mt-4">Именинница</strong>
+          <small>
+            Получить самый странный сайт-подарок.
+          </small>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <section class="wrapper section">
+
+    <div class="glass card">
+  
+      <div class="flex flex-wrap justify-between gap-5 items-center">
+  
+        <div>
+          <h2 class="text-3xl font-bold">
+            📸 Memory Archive
+          </h2>
+  
+          <p class="subtitle mt-3 max-w-2xl">
+            Official gallery of the cutest human detected by the system.
+          </p>
+        </div>
+  
+        <div class="tag">
+          10 FILES DETECTED
+        </div>
+  
+      </div>
+  
+      <div class="photo-grid">
+  
+        <div class="photo-card large">
+          <img src="photo1.jpeg">
+          <div class="photo-overlay">
+            main character energy
+          </div>
+        </div>
+  
+        <div class="photo-card">
+          <img src="photo10.jpeg">
+          <div class="photo-overlay">
+            illegally pretty
+          </div>
+        </div>
+  
+        <div class="photo-card">
+          <img src="photo3.jpeg">
+          <div class="photo-overlay">
+            emotional support human
+          </div>
+        </div>
+  
+        <div class="photo-card">
+          <img src="photo2.jpeg">
+          <div class="photo-overlay">
+            system favorite
+          </div>
+        </div>
+  
+        <div class="photo-card large">
+          <img src="photo4.jpeg">
+          <div class="photo-overlay">
+            movie scene vibes
+          </div>
+        </div>
+  
+        <div class="photo-card">
+          <img src="photo5.jpeg">
+          <div class="photo-overlay">
+            comfort level: maximum
+          </div>
+        </div>
+  
+        <div class="photo-card">
+          <img src="photo6.jpeg">
+          <div class="photo-overlay">
+            birthday girl detected
+          </div>
+        </div>
+  
+        <div class="photo-card">
+          <img src="photo7.jpeg">
+          <div class="photo-overlay">
+            cinematic frame
+          </div>
+        </div>
+  
+        <div class="photo-card">
+          <img src="photo8.jpeg">
+          <div class="photo-overlay">
+            protected by plot armor
+          </div>
+        </div>
+  
+        <div class="photo-card large">
+          <img src="photo9.jpeg">
+          <div class="photo-overlay">
+            favorite archive entry
+          </div>
+        </div>
+  
+      </div>
+  
+    </div>
+  
+  </section>
+  <section class="wrapper section">
+
+    <div class="terminal">
+
+      <div class="terminal-header">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+
+        <div class="text-white/40 text-sm ml-3">
+          messages.txt
+        </div>
+      </div>
+
+      <div class="terminal-body" id="terminal-body">
+        <div id="secret-panel" style="display:none; margin-bottom:20px; padding:18px; border-radius:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(0,255,133,0.15);">
+          <div style="color:#00ff85; font-weight:bold; margin-bottom:10px;">
+            CONFIDENTIAL FILE
+          </div>
+
+          <div style="line-height:1.8; color:rgba(255,255,255,0.7);">
+            Energy Level: suspiciously high<br>
+            Sleep Schedule: completely destroyed<br>
+            Danger Level: can accidentally become your favorite person<br>
+            Special Ability: making boring days less boring
+          </div>
+        </div>
+        <div>Да, я реально сделал сайт вместо обычного поздравления.</div>
+        <div>Это либо очень мило, либо очень странно. Я ещё не определился.</div>
+        <div>Попробуй написать: help, joke или gift</div>
+      </div>
+
+      <div class="terminal-input-row">
+        <div class="text-green-400">➜</div>
+
+        <input
+          type="text"
+          class="terminal-input"
+          id="terminal-input"
+          placeholder="Напиши что-нибудь..."
+        />
+      </div>
+
+    </div>
+
+  </section>
+
+    
+  <footer>
+    Бюджет: 0₸ // Энтузиазм: критический
+  </footer>
+
+  <script>
+
+    // =========================
+    // MATRIX BACKGROUND
+    // =========================
+
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+
+    let width;
+    let height;
+    let columns;
+    let drops;
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+
+      columns = Math.floor(width / 18);
+      drops = Array(columns).fill(1);
+    }
+
+    resizeCanvas();
+
+    const matrixChars = 'アァカサタナハマヤャラワ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    function drawMatrix() {
+
+      ctx.fillStyle = 'rgba(3,3,3,0.08)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = '#00ff85';
+      ctx.font = '14px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+
+        const text = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+
+        ctx.fillText(text, i * 18, drops[i] * 18);
+
+        if (drops[i] * 18 > height && Math.random() > 0.98) {
+          drops[i] = 0;
+        }
+
+        drops[i]++;
+      }
+    }
+
+    function animateMatrix() {
+      drawMatrix();
+      requestAnimationFrame(animateMatrix);
+    }
+
+    animateMatrix();
+
+    window.addEventListener('resize', resizeCanvas);
+
+
+
+    // =========================
+    // CONFETTI
+    // =========================
+
+    const confettiBtn = document.getElementById('confetti-btn');
+
+    function launchConfetti() {
+
+      confetti({
+        particleCount: 160,
+        spread: 120,
+        startVelocity: 50,
+        origin: { y: 0.6 },
+        colors: ['#00ff85', '#ff00c8', '#ffffff', '#ff9d00']
+      });
+
+    }
+
+    confettiBtn.addEventListener('click', launchConfetti);
+
+
+
+    // =========================
+    // UPTIME TIMER
+    // =========================
+
+    const uptimeEl = document.getElementById('uptime');
+
+    const friendshipDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 3);
+
+    function updateUptime() {
+
+      const now = new Date();
+      const diff = now - friendshipDate;
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      uptimeEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    updateUptime();
+    setInterval(updateUptime, 1000);
+
+
+
+    // =========================
+    // QUOTES
+    // =========================
+
+    const quotes = [
+      'Ты официально входишь в топ людей, с которыми приятно общаться.',
+      'Я всё ещё не понимаю, зачем я делал это ночью, но оно того стоило.',
+      'Если сайт выглядит странно — это часть дизайна.',
+      'Этот сайт был создан при критическом уровне энтузиазма.',
+      'Ты каким‑то образом делаешь общение не утомляющим.',
+      'Я мог просто написать “с др”, но было уже поздно останавливаться.',
+      'Твоя харизма официально нарушает технику безопасности.',
+      'Компилятор подтвердил: ты крутая.'
+    ];
+
+    const quoteBtn = document.getElementById('quote-btn');
+    const quoteBox = document.getElementById('quote-box');
+
+    quoteBtn.addEventListener('click', () => {
+
+      const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+
+      quoteBox.textContent = randomQuote;
+
+      launchConfetti();
+    });
+
+
+
+    // =========================
+    // DISTANCE GAME
+    // =========================
+
+    let distance = Number(localStorage.getItem('distance')) || 995;
+
+    const distanceValue = document.getElementById('distance-value');
+    const bigDistance = document.getElementById('big-distance');
+    const gameMessage = document.getElementById('game-message');
+    const distanceProgress = document.getElementById('distance-progress');
+
+    const runner = document.getElementById('runner');
+
+    const routePath = document.getElementById('route-path');
+
+    const routeLength = routePath.getTotalLength();
+
+    routePath.style.strokeDasharray = routeLength;
+    routePath.style.strokeDashoffset = routeLength;
+
+    const walkBtn = document.getElementById('walk-btn');
+    const shiftBtn = document.getElementById('shift-btn');
+    const boostBtn = document.getElementById('boost-btn');
+
+    function updateDistanceUI() {
+
+      distanceValue.textContent = distance;
+      bigDistance.textContent = `${distance} KM`;
+
+      const progress = ((995 - distance) / 995) * 82;
+
+      runner.style.left = `${progress}%`;
+
+      distanceProgress.style.width = `${(995 - distance) / 995 * 100}%`;
+
+      const pathProgress = (995 - distance) / 995;
+
+      routePath.style.strokeDashoffset =
+        routeLength - (routeLength * pathProgress);
+
+      localStorage.setItem('distance', distance);
+
+      if (distance <= 0) {
+
+        distance = 0;
+
+        gameMessage.textContent = 'Расстояние уничтожено. Победа.';
+
+        walkBtn.disabled = true;
+        shiftBtn.disabled = true;
+        boostBtn.disabled = true;
+
+        launchConfetti();
+
+        createNotification(
+          'Distance Zero',
+          'Главная цель успешно выполнена.'
+        );
+      }
+    }
+
+    function reduceDistance(value, message) {
+
+      distance -= value;
+
+      if (distance < 0) {
+        distance = 0;
+      }
+
+      gameMessage.textContent = message;
+
+      updateDistanceUI();
+    }
+
+    walkBtn.addEventListener('click', () => {
+      reduceDistance(1, 'Еще один километр позади.');
+    });
+
+    shiftBtn.addEventListener('click', () => {
+      reduceDistance(15, 'Смена завершена. Расстояние уменьшено.');
+      launchConfetti();
+    });
+
+    boostBtn.addEventListener('click', () => {
+      reduceDistance(50, 'Критический мемный урон по расстоянию.');
+      launchConfetti();
+    });
+
+    updateDistanceUI();
+
+
+
+    // =========================
+    // TERMINAL SYSTEM
+    // =========================
+
+    const terminalInput = document.getElementById('terminal-input');
+    const terminalBody = document.getElementById('terminal-body');
+
+    function appendTerminal(text, type = 'normal') {
+
+      const div = document.createElement('div');
+
+      if (type === 'command') {
+        div.innerHTML = `<span style="color:white">➜ ${text}</span>`;
+      }
+      else {
+        div.textContent = text;
+      }
+
+      terminalBody.appendChild(div);
+      terminalBody.scrollTop = terminalBody.scrollHeight;
+    }
+
+    const secretPanel = document.getElementById('secret-panel');
+
+    const commands = {
+
+      help() {
+        return 'Available commands: help, gift, status, factory, clear, ping, joke, midnight';
+      },
+
+      gift() {
+        launchConfetti();
+        return 'Главный подарок находится вне системы. Проверь сообщения.';
+      },
+
+      status() {
+        return 'STATUS: emotional connection stable.';
+      },
+
+      factory() {
+        return 'Factory report: best employee detected.';
+      },
+
+      ping() {
+        return 'Ping: 12ms // Connection quality: excellent';
+      },
+
+      midnight() {
+
+        secretPanel.style.display = 'block';
+
+        launchConfetti();
+
+        return 'Hidden file unlocked successfully.';
+      },
+
+      joke() {
+
+        const jokes = [
+          'Почему программисты любят ночь? Потому что баги тоже спят.',
+          'console.log("happy birthday") успешно выполнен.',
+          'Ты не устала. Ты просто buffering.',
+          '404: плохое настроение not found.'
+        ];
+
+        return jokes[Math.floor(Math.random() * jokes.length)];
+      },
+
+      clear() {
+        terminalBody.innerHTML = '';
+        return 'Terminal cleaned.';
+      }
+    };
+
+    terminalInput.addEventListener('keydown', (event) => {
+
+      if (event.key !== 'Enter') {
+        return;
+      }
+
+      const value = terminalInput.value.trim().toLowerCase();
+
+      if (!value) {
+        return;
+      }
+
+      appendTerminal(value, 'command');
+
+      if (commands[value]) {
+
+        const response = commands[value]();
+
+        if (response) {
+          appendTerminal(response);
+        }
+      }
+      else {
+        appendTerminal('Command not found. Type help.');
+      }
+
+      terminalInput.value = '';
+    });
+
+
+
+    // =========================
+    // NOTIFICATIONS
+    // =========================
+
+    const notifications = document.getElementById('notifications');
+
+    function createNotification(title, text) {
+
+      const notification = document.createElement('div');
+
+      notification.className = 'notification';
+
+      notification.innerHTML = `
+        <strong>${title}</strong>
+        <div style="color:rgba(255,255,255,0.7); line-height:1.6;">
+          ${text}
+        </div>
+      `;
+
+      notifications.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 4500);
+    }
+
+    document.getElementById('notify-btn').addEventListener('click', () => {
+
+      const randomNotifications = [
+        {
+          title: 'Factory Server',
+          text: 'User happiness increased +25%'
+        },
+        {
+          title: 'System Alert',
+          text: 'Birthday energy levels are critically high.'
+        },
+        {
+          title: 'Connection Stable',
+          text: 'Long distance detected but emotionally ignored.'
+        },
+        {
+          title: 'Achievement Unlocked',
+          text: 'You survived another shift.'
+        }
+      ];
+
+      const item = randomNotifications[
+        Math.floor(Math.random() * randomNotifications.length)
+      ];
+
+      createNotification(item.title, item.text);
+    });
+
+
+
+    // =========================
+    // AMBIENT SOUND
+    // =========================
+
+    const musicBtn = document.getElementById('music-btn');
+
+    const bgMusic = document.getElementById('bg-music');
+
+    let isPlaying = false;
+
+    musicBtn.addEventListener('click', () => {
+
+    if (!isPlaying) {
+
+        bgMusic.volume = 0.18;
+
+        bgMusic.play();
+
+        musicBtn.textContent = 'Музыка OFF';
+
+        isPlaying = true;
+
+        createNotification(
+            'Music Player',
+            'Атмосфера загружена.'
+        );
+
+    } else {
+
+        bgMusic.pause();
+
+        musicBtn.textContent = 'Музыка ON';
+
+        isPlaying = false;
+    }
+
+});
+
+
+    // =========================
+    // RANDOM AUTO EVENTS
+    // =========================
+
+    const autoEvents = [
+      'Factory mood boosted.',
+      'Friendship server stable.',
+      'Positive emotions synchronized.',
+      'Distance reduction protocol active.',
+      'Night shift completed successfully.'
+    ];
+
+    setInterval(() => {
+
+      const text = autoEvents[
+        Math.floor(Math.random() * autoEvents.length)
+      ];
+
+      createNotification('Auto Event', text);
+
+    }, 22000);
+
+
+
+    // =========================
+    // INITIAL EFFECTS
+    // =========================
+
+    window.addEventListener('load', () => {
+
+      setTimeout(() => {
+
+        createNotification(
+          'Birthday Protocol',
+          'System initialized successfully.'
+        );
+
+      }, 1200);
+
+    });
+
+
+    // =========================
+    // QUEST SYSTEM (ПРОСТОЙ КВЕСТ)
+    // =========================
+
+      let questStep = 0;
+
+    const questMessages = [
+  'Система: доступ к квесту открыт. Введи пароль.',
+  'Загадка 1: Я есть у тебя, но ты меня не видишь. Я исчезаю, когда ты называешь меня. Что это?',
+  'Загадка 2: Чем больше берешь — тем больше оставляешь. Что это?',
+  'Загадка 3: Я не живое, но расту. У меня нет легких, но мне нужен воздух. Что это?',
+  'Система: доступ подтвержден. 🎉 Ты прошла квест.'
+];
+
+    const questAnswers = [
+  'secret',
+  'тишина',
+  'следы',
+  'огонь'
+];
+
+    commands.start = function () {
+  questStep = 1;
+  return questMessages[0];
+};
+
+    function checkQuest(input) {
+  if (questStep === 0) return false;
+
+  if (input === questAnswers[questStep - 1]) {
+    appendTerminal('✔ Верно');
+
+    if (questStep === 4) {
+      launchConfetti();
+      createNotification('Quest Complete', 'Ты прошла весь квест.');
+      questStep = 0;
+      return questMessages[4];
+    }
+
+    const msg = questMessages[questStep];
+    questStep++;
+    return msg;
+
+  } else {
+    return '✖ Неверно. Попробуй ещё.';
+  }
+}
+
+    // ПЕРЕХВАТ ВВОДА
+    const originalHandler = terminalInput.onkeydown;
+
+  terminalInput.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+
+  const value = terminalInput.value.trim().toLowerCase();
+  if (!value) return;
+
+  appendTerminal(value, 'command');
+
+  // ЕСЛИ КВЕСТ АКТИВЕН
+  if (questStep > 0) {
+    const result = checkQuest(value);
+    appendTerminal(result);
+    terminalInput.value = '';
+    return;
+  }
+
+  // СТАРЫЕ КОМАНДЫ
+  if (commands[value]) {
+    const response = commands[value]();
+    if (response) appendTerminal(response);
+  } else {
+    appendTerminal('Command not found. Попробуй: start');
+  }
+
+  terminalInput.value = '';
+});
+
+  </script>
+</body>
+</html>
